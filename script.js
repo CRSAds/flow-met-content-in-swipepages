@@ -1,78 +1,48 @@
-document.addEventListener('DOMContentLoaded', () => {
-  const getContent = (id) => {
-    const element = document.getElementById(id);
-    return element ? element.innerText.trim() : '';
-  };
+document.addEventListener("DOMContentLoaded", () => {
+  // CMS content onzichtbaar maken
+  const cmsContent = document.getElementById('cms-content');
+  if (cmsContent) {
+    cmsContent.style.display = 'none';
+  }
 
-  const getImage = (id) => {
-    const img = document.getElementById(id);
-    return img ? img.src : '';
-  };
+  // Flow container vullen
+  const flowContainer = document.getElementById('flow-container');
 
-  const updateContent = () => {
-    document.getElementById('headline').innerText = getContent('cms-headline');
-    document.getElementById('subline').innerText = getContent('cms-subline');
-    document.getElementById('startButton').innerText = getContent('cms-buttontext');
-    document.getElementById('hero-large').src = getImage('cms-hero-large');
-    document.getElementById('hero-small').src = getImage('cms-hero-small');
-  };
+  // Basis flow starten
+  const startScreen = `
+    <div class="start-screen">
+      <img src="${document.getElementById('cms-hero-large').src}" alt="Hero groot">
+      <h1>${document.getElementById('cms-headline').innerText}</h1>
+      <p>${document.getElementById('cms-subline').innerText}</p>
+      <button id="startButton">${document.getElementById('cms-buttontext').innerText}</button>
+    </div>
+  `;
+  flowContainer.innerHTML = startScreen;
 
-  const questions = [];
-  let currentQuestionIndex = 0;
+  // Kleur styling
+  const mainColor = document.getElementById('cms-maincolor').innerText.trim();
+  const accentColor = document.getElementById('cms-accentcolor').innerText.trim();
 
-  const loadQuestions = () => {
-    let index = 1;
-    while (true) {
-      const question = getContent(`cms-q${index}`);
-      if (!question) break;
+  document.documentElement.style.setProperty('--main-color', mainColor);
+  document.documentElement.style.setProperty('--accent-color', accentColor);
 
-      const answer1 = getContent(`cms-q${index}-a1`);
-      const answer2 = getContent(`cms-q${index}-a2`);
-
-      questions.push({ question, answers: [answer1, answer2] });
-      index++;
-    }
-  };
-
-  const showQuestion = () => {
-    const container = document.getElementById('questionContainer');
-    container.innerHTML = '';
-
-    if (currentQuestionIndex < questions.length) {
-      const q = questions[currentQuestionIndex];
-      const questionTitle = document.createElement('h2');
-      questionTitle.innerText = q.question;
-      questionTitle.className = 'question';
-      container.appendChild(questionTitle);
-
-      q.answers.forEach(answer => {
-        const btn = document.createElement('button');
-        btn.innerText = answer;
-        btn.className = 'answer-button';
-        btn.onclick = () => {
-          currentQuestionIndex++;
-          updateProgress();
-          showQuestion();
-        };
-        container.appendChild(btn);
-      });
-    } else {
-      container.innerHTML = '<h2>Bedankt voor je deelname!</h2>';
-    }
-  };
-
-  const updateProgress = () => {
-    const progress = (currentQuestionIndex / questions.length) * 100;
-    document.getElementById('progress').style.width = `${progress}%`;
-  };
-
+  // Klik op Start -> vragen tonen
   document.getElementById('startButton').addEventListener('click', () => {
-    document.getElementById('prelander').style.display = 'none';
-    document.getElementById('progressContainer').style.display = 'block';
-    document.getElementById('flow').style.display = 'block';
-    showQuestion();
+    showQuestions();
   });
 
-  updateContent();
-  loadQuestions();
+  function showQuestions() {
+    const question1 = document.getElementById('cms-q1').innerText;
+    const answer1a = document.getElementById('cms-q1-a1').innerText;
+    const answer1b = document.getElementById('cms-q1-a2').innerText;
+
+    const questionHTML = `
+      <div class="question-block">
+        <h2>${question1}</h2>
+        <button class="answer-button">${answer1a}</button>
+        <button class="answer-button">${answer1b}</button>
+      </div>
+    `;
+    flowContainer.innerHTML = questionHTML;
+  }
 });
