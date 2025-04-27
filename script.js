@@ -1,73 +1,78 @@
-document.addEventListener('DOMContentLoaded', function() {
-  // Ophalen Swipe Pages CMS blokken
-  const getContent = (id) => document.getElementById(id)?.innerText?.trim() || '';
+document.addEventListener('DOMContentLoaded', () => {
+  const getContent = (id) => {
+    const element = document.getElementById(id);
+    return element ? element.innerText.trim() : '';
+  };
 
-  // Hero en tekst vullen
-  document.getElementById('cms-hero-large').src = getContent('cms-hero-large');
-  document.getElementById('cms-hero-small').src = getContent('cms-hero-small');
-  document.getElementById('cms-headline').innerText = getContent('cms-headline');
-  document.getElementById('cms-subline').innerText = getContent('cms-subline');
-  document.getElementById('startButton').innerText = getContent('cms-buttontext');
+  const getImage = (id) => {
+    const img = document.getElementById(id);
+    return img ? img.src : '';
+  };
 
-  // Vragen en antwoorden dynamisch laden
+  const updateContent = () => {
+    document.getElementById('headline').innerText = getContent('cms-headline');
+    document.getElementById('subline').innerText = getContent('cms-subline');
+    document.getElementById('startButton').innerText = getContent('cms-buttontext');
+    document.getElementById('hero-large').src = getImage('cms-hero-large');
+    document.getElementById('hero-small').src = getImage('cms-hero-small');
+  };
+
   const questions = [];
-  let i = 1;
-  while (document.getElementById(`cms-q${i}`)) {
-    questions.push({
-      question: getContent(`cms-q${i}`),
-      answers: [
-        getContent(`cms-q${i}-a1`),
-        getContent(`cms-q${i}-a2`)
-      ]
-    });
-    i++;
-  }
+  let currentQuestionIndex = 0;
 
-  let currentQuestion = 0;
+  const loadQuestions = () => {
+    let index = 1;
+    while (true) {
+      const question = getContent(`cms-q${index}`);
+      if (!question) break;
 
-  function showQuestion() {
-    const q = questions[currentQuestion];
+      const answer1 = getContent(`cms-q${index}-a1`);
+      const answer2 = getContent(`cms-q${index}-a2`);
+
+      questions.push({ question, answers: [answer1, answer2] });
+      index++;
+    }
+  };
+
+  const showQuestion = () => {
     const container = document.getElementById('questionContainer');
-    container.innerHTML = `
-      <h2>${q.question}</h2>
-      ${q.answers.map(answer => `<button class="choice-button">${answer}</button>`).join('')}
-    `;
-    document.querySelectorAll('.choice-button').forEach(button => {
-      button.addEventListener('click', () => {
-        currentQuestion++;
-        updateProgressBar();
-        if (currentQuestion < questions.length) {
+    container.innerHTML = '';
+
+    if (currentQuestionIndex < questions.length) {
+      const q = questions[currentQuestionIndex];
+      const questionTitle = document.createElement('h2');
+      questionTitle.innerText = q.question;
+      questionTitle.className = 'question';
+      container.appendChild(questionTitle);
+
+      q.answers.forEach(answer => {
+        const btn = document.createElement('button');
+        btn.innerText = answer;
+        btn.className = 'answer-button';
+        btn.onclick = () => {
+          currentQuestionIndex++;
+          updateProgress();
           showQuestion();
-        } else {
-          // Formulier tonen
-          container.innerHTML = `
-            <div class="custom-form">
-              <div class="form-group"><input type="text" placeholder="Voornaam"></div>
-              <div class="form-group"><input type="text" placeholder="Achternaam"></div>
-              <div class="form-group"><input type="email" placeholder="E-mail"></div>
-              <div class="form-group"><input type="text" placeholder="Postcode"></div>
-              <div class="form-group"><input type="text" placeholder="Straat & Huisnummer"></div>
-              <div class="form-group"><input type="text" placeholder="Woonplaats"></div>
-              <div class="form-group"><input type="tel" placeholder="Telefoonnummer"></div>
-              <button class="form-button">Verzend</button>
-            </div>
-          `;
-        }
+        };
+        container.appendChild(btn);
       });
-    });
-  }
+    } else {
+      container.innerHTML = '<h2>Bedankt voor je deelname!</h2>';
+    }
+  };
 
-  function updateProgressBar() {
-    const progress = ((currentQuestion) / questions.length) * 100;
+  const updateProgress = () => {
+    const progress = (currentQuestionIndex / questions.length) * 100;
     document.getElementById('progress').style.width = `${progress}%`;
-  }
+  };
 
-  // Startknop
-  document.getElementById('startButton').addEventListener('click', function() {
+  document.getElementById('startButton').addEventListener('click', () => {
     document.getElementById('prelander').style.display = 'none';
-    document.getElementById('progressContainer').style.display = 'flex';
+    document.getElementById('progressContainer').style.display = 'block';
     document.getElementById('flow').style.display = 'block';
     showQuestion();
-    updateProgressBar();
   });
+
+  updateContent();
+  loadQuestions();
 });
