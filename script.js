@@ -1,48 +1,85 @@
-document.addEventListener("DOMContentLoaded", () => {
-  // CMS content onzichtbaar maken
-  const cmsContent = document.getElementById('cms-content');
-  if (cmsContent) {
-    cmsContent.style.display = 'none';
+document.addEventListener('DOMContentLoaded', () => {
+  // Haal alle CMS data op
+  const heroLarge = document.getElementById('cms-hero-large')?.querySelector('img')?.src || '';
+  const heroSmall = document.getElementById('cms-hero-small')?.querySelector('img')?.src || '';
+  const headline = document.getElementById('cms-headline')?.innerText || '';
+  const subline = document.getElementById('cms-subline')?.innerText || '';
+  const buttontext = document.getElementById('cms-buttontext')?.innerText || 'Start';
+  const mainColor = document.getElementById('cms-maincolor')?.innerText || '#1B68E9';
+  const accentColor = document.getElementById('cms-accentcolor')?.innerText || '#F55623';
+
+  // Vul de startpagina
+  document.getElementById('hero-large').src = heroLarge;
+  document.getElementById('headline').innerText = headline;
+  document.getElementById('subline').innerText = subline;
+  document.getElementById('start-button').innerText = buttontext;
+
+  // Progressbar kleur
+  document.querySelector('.progress-fill').style.backgroundColor = accentColor;
+
+  // Startknop
+  document.getElementById('start-button').addEventListener('click', startSurvey);
+
+  // Functies
+  let currentQuestion = 0;
+  let questions = [];
+
+  function startSurvey() {
+    document.getElementById('start-screen').style.display = 'none';
+    document.getElementById('progress-bar').style.display = 'flex';
+    document.getElementById('question-screen').style.display = 'block';
+    loadQuestions();
+    showQuestion();
   }
 
-  // Flow container vullen
-  const flowContainer = document.getElementById('flow-container');
+  function loadQuestions() {
+    let i = 1;
+    while (true) {
+      const question = document.getElementById(`cms-q${i}`);
+      const answer1 = document.getElementById(`cms-q${i}-a1`);
+      const answer2 = document.getElementById(`cms-q${i}-a2`);
+      if (!question) break;
+      questions.push({
+        text: question.innerText,
+        answers: [
+          answer1?.innerText || 'Ja',
+          answer2?.innerText || 'Nee'
+        ]
+      });
+      i++;
+    }
+  }
 
-  // Basis flow starten
-  const startScreen = `
-    <div class="start-screen">
-      <img src="${document.getElementById('cms-hero-large').src}" alt="Hero groot">
-      <h1>${document.getElementById('cms-headline').innerText}</h1>
-      <p>${document.getElementById('cms-subline').innerText}</p>
-      <button id="startButton">${document.getElementById('cms-buttontext').innerText}</button>
-    </div>
-  `;
-  flowContainer.innerHTML = startScreen;
+  function showQuestion() {
+    if (currentQuestion >= questions.length) {
+      showFormShort();
+      return;
+    }
+    const q = questions[currentQuestion];
+    document.getElementById('question-text').innerText = q.text;
+    const answerButtons = document.getElementById('answer-buttons');
+    answerButtons.innerHTML = '';
 
-  // Kleur styling
-  const mainColor = document.getElementById('cms-maincolor').innerText.trim();
-  const accentColor = document.getElementById('cms-accentcolor').innerText.trim();
+    q.answers.forEach(answer => {
+      const button = document.createElement('button');
+      button.innerText = answer;
+      button.classList.add('answer-button');
+      button.addEventListener('click', () => {
+        currentQuestion++;
+        updateProgress();
+        showQuestion();
+      });
+      answerButtons.appendChild(button);
+    });
+  }
 
-  document.documentElement.style.setProperty('--main-color', mainColor);
-  document.documentElement.style.setProperty('--accent-color', accentColor);
+  function updateProgress() {
+    const percentage = (currentQuestion / (questions.length + 2)) * 100;
+    document.getElementById('progress-fill').style.width = `${percentage}%`;
+  }
 
-  // Klik op Start -> vragen tonen
-  document.getElementById('startButton').addEventListener('click', () => {
-    showQuestions();
-  });
-
-  function showQuestions() {
-    const question1 = document.getElementById('cms-q1').innerText;
-    const answer1a = document.getElementById('cms-q1-a1').innerText;
-    const answer1b = document.getElementById('cms-q1-a2').innerText;
-
-    const questionHTML = `
-      <div class="question-block">
-        <h2>${question1}</h2>
-        <button class="answer-button">${answer1a}</button>
-        <button class="answer-button">${answer1b}</button>
-      </div>
-    `;
-    flowContainer.innerHTML = questionHTML;
+  function showFormShort() {
+    document.getElementById('question-screen').style.display = 'none';
+    document.getElementById('form-short').style.display = 'block';
   }
 });
