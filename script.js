@@ -1,85 +1,89 @@
 document.addEventListener('DOMContentLoaded', () => {
-  // Haal alle CMS data op
-  const heroLarge = document.getElementById('cms-hero-large')?.querySelector('img')?.src || '';
-  const heroSmall = document.getElementById('cms-hero-small')?.querySelector('img')?.src || '';
-  const headline = document.getElementById('cms-headline')?.innerText || '';
-  const subline = document.getElementById('cms-subline')?.innerText || '';
-  const buttontext = document.getElementById('cms-buttontext')?.innerText || 'Start';
-  const mainColor = document.getElementById('cms-maincolor')?.innerText || '#1B68E9';
-  const accentColor = document.getElementById('cms-accentcolor')?.innerText || '#F55623';
+  // CMS content ophalen
+  const heroLarge = document.getElementById('hero-large');
+  const heroSmall = document.getElementById('hero-small');
+  const headline = document.getElementById('headline');
+  const subline = document.getElementById('subline');
+  const startButton = document.getElementById('start-button');
 
-  // Vul de startpagina
-  document.getElementById('hero-large').src = heroLarge;
-  document.getElementById('headline').innerText = headline;
-  document.getElementById('subline').innerText = subline;
-  document.getElementById('start-button').innerText = buttontext;
+  // Ophalen uit Swipe Pages blokken
+  heroLarge.src = document.getElementById('cms-hero-large')?.src || '';
+  heroSmall.src = document.getElementById('cms-hero-small')?.src || '';
+  headline.textContent = document.getElementById('cms-headline')?.textContent || '';
+  subline.textContent = document.getElementById('cms-subline')?.textContent || '';
+  startButton.textContent = document.getElementById('cms-buttontext')?.textContent || '';
 
-  // Progressbar kleur
-  document.querySelector('.progress-fill').style.backgroundColor = accentColor;
+  // Kleuren instellen
+  const mainColor = document.getElementById('cms-maincolor')?.textContent.trim() || '#2a36f7';
+  const accentColor = document.getElementById('cms-accentcolor')?.textContent.trim() || '#ff7c00';
 
-  // Startknop
-  document.getElementById('start-button').addEventListener('click', startSurvey);
+  document.documentElement.style.setProperty('--main-color', mainColor);
+  document.documentElement.style.setProperty('--accent-color', accentColor);
 
-  // Functies
+  // Flow starten
+  const startScreen = document.getElementById('start-screen');
+  const progressBar = document.getElementById('progress-bar');
+  const questionScreen = document.getElementById('question-screen');
+
+  startButton.addEventListener('click', () => {
+    startScreen.style.display = 'none';
+    progressBar.style.display = 'block';
+    questionScreen.style.display = 'block';
+    loadQuestion(0);
+  });
+
+  // Vragen ophalen
+  const questions = [];
+  let questionIndex = 1;
+  while (document.getElementById(`cms-q${questionIndex}`)) {
+    const question = document.getElementById(`cms-q${questionIndex}`).textContent;
+    const answer1 = document.getElementById(`cms-q${questionIndex}-a1`)?.textContent || '';
+    const answer2 = document.getElementById(`cms-q${questionIndex}-a2`)?.textContent || '';
+    questions.push({ question, answers: [answer1, answer2] });
+    questionIndex++;
+  }
+
   let currentQuestion = 0;
-  let questions = [];
 
-  function startSurvey() {
-    document.getElementById('start-screen').style.display = 'none';
-    document.getElementById('progress-bar').style.display = 'flex';
-    document.getElementById('question-screen').style.display = 'block';
-    loadQuestions();
-    showQuestion();
-  }
-
-  function loadQuestions() {
-    let i = 1;
-    while (true) {
-      const question = document.getElementById(`cms-q${i}`);
-      const answer1 = document.getElementById(`cms-q${i}-a1`);
-      const answer2 = document.getElementById(`cms-q${i}-a2`);
-      if (!question) break;
-      questions.push({
-        text: question.innerText,
-        answers: [
-          answer1?.innerText || 'Ja',
-          answer2?.innerText || 'Nee'
-        ]
-      });
-      i++;
-    }
-  }
-
-  function showQuestion() {
-    if (currentQuestion >= questions.length) {
-      showFormShort();
+  function loadQuestion(index) {
+    const q = questions[index];
+    if (!q) {
+      // Formulier tonen als vragen klaar zijn
+      document.getElementById('question-screen').style.display = 'none';
+      document.getElementById('form-short').style.display = 'block';
       return;
     }
-    const q = questions[currentQuestion];
-    document.getElementById('question-text').innerText = q.text;
+    document.getElementById('question-text').textContent = q.question;
     const answerButtons = document.getElementById('answer-buttons');
     answerButtons.innerHTML = '';
-
     q.answers.forEach(answer => {
-      const button = document.createElement('button');
-      button.innerText = answer;
-      button.classList.add('answer-button');
-      button.addEventListener('click', () => {
+      const btn = document.createElement('button');
+      btn.textContent = answer;
+      btn.addEventListener('click', () => {
         currentQuestion++;
         updateProgress();
-        showQuestion();
+        loadQuestion(currentQuestion);
       });
-      answerButtons.appendChild(button);
+      answerButtons.appendChild(btn);
     });
   }
 
   function updateProgress() {
-    const percentage = (currentQuestion / (questions.length + 2)) * 100;
-    document.getElementById('progress-fill').style.width = `${percentage}%`;
+    const fill = document.getElementById('progress-fill');
+    fill.style.width = `${(currentQuestion / questions.length) * 100}%`;
   }
 
-  function showFormShort() {
-    document.getElementById('question-screen').style.display = 'none';
-    document.getElementById('form-short').style.display = 'block';
-  }
+  // Short form verzenden
+  document.getElementById('short-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    document.getElementById('form-short').style.display = 'none';
+    document.getElementById('form-long').style.display = 'block';
+  });
+
+  // Long form verzenden
+  document.getElementById('long-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    document.getElementById('form-long').style.display = 'none';
+    document.getElementById('thank-you').style.display = 'block';
+  });
 });
