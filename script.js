@@ -1,116 +1,130 @@
-// Wacht tot pagina geladen is
-document.addEventListener('DOMContentLoaded', function() {
-  
-  // CMS content uitlezen
-  const cmsContent = document.getElementById('cms-content');
-  const cmsElements = cmsContent ? cmsContent.querySelectorAll('[id]') : [];
+// Eerst: helper functie om te wachten op #cms-content
+function waitForCmsContent(callback) {
+  const checkExist = setInterval(() => {
+    if (document.getElementById('cms-content')) {
+      clearInterval(checkExist);
+      callback();
+    }
+  }, 100);
+}
 
-  const cmsData = {};
-  cmsElements.forEach(el => {
-    cmsData[el.id] = el.innerText.trim();
-  });
+// Start pas nadat cms-content geladen is
+document.addEventListener('DOMContentLoaded', function () {
+  waitForCmsContent(function () {
 
-  // Content vullen op startscherm
-  document.getElementById('hero-large').src = cmsData['cms-hero-large'] || '';
-  document.getElementById('headline').innerText = cmsData['cms-headline'] || '';
-  document.getElementById('subline').innerText = cmsData['cms-subline'] || '';
-  document.getElementById('start-button').innerText = cmsData['cms-buttontext'] || '';
+    console.log("✅ CMS-content gevonden, flow wordt gestart");
 
-  // Progressbar vullen
-  document.getElementById('hero-small').src = cmsData['cms-hero-small'] || '';
-  document.getElementById('progress-title').innerText = "Op weg naar je prijs";
+    // Content uitlezen
+    const heroLarge = document.getElementById('hero-large');
+    const heroSmall = document.getElementById('hero-small');
+    const headline = document.getElementById('headline');
+    const subline = document.getElementById('subline');
+    const startButton = document.getElementById('start-button');
+    const questionText = document.getElementById('question-text');
+    const answerButtons = document.getElementById('answer-buttons');
+    const progressFill = document.getElementById('progress-fill');
 
-  // Kleuren instellen
-  const mainColor = cmsData['cms-maincolor'] || '#1B68E9';
-  const accentColor = cmsData['cms-accentcolor'] || '#F55623';
-  document.documentElement.style.setProperty('--main-color', mainColor);
-  document.documentElement.style.setProperty('--accent-color', accentColor);
+    const heroLargeCms = document.getElementById('hero-large-cms');
+    const heroSmallCms = document.getElementById('hero-small-cms');
+    const headlineCms = document.getElementById('headline-cms');
+    const sublineCms = document.getElementById('subline-cms');
+    const buttonCms = document.getElementById('button-cms');
 
-  // Dynamisch vragen ophalen
-  const questions = [];
-  let index = 1;
-  while (cmsData[`cms-q${index}`]) {
-    questions.push({
-      question: cmsData[`cms-q${index}`],
-      answers: [
-        cmsData[`cms-q${index}-a1`] || '',
-        cmsData[`cms-q${index}-a2`] || ''
-      ]
-    });
-    index++;
-  }
+    const questionBlocks = Array.from(document.querySelectorAll('[id^="question-"]'));
+    const answerBlocks = Array.from(document.querySelectorAll('[id^="answers-"]'));
 
-  // Flow logica
-  let currentQuestion = 0;
+    const flowContainer = document.getElementById('dynamic-flow');
+    const startScreen = document.getElementById('start-screen');
+    const progressBar = document.getElementById('progress-bar');
+    const questionScreen = document.getElementById('question-screen');
+    const formShort = document.getElementById('form-short');
+    const formLong = document.getElementById('form-long');
+    const thankYou = document.getElementById('thank-you');
 
-  const startScreen = document.getElementById('start-screen');
-  const progressBar = document.getElementById('progress-bar');
-  const questionScreen = document.getElementById('question-screen');
-  const formShort = document.getElementById('form-short');
-  const formLong = document.getElementById('form-long');
-  const thankYou = document.getElementById('thank-you');
+    // Vul de startpagina vanuit CMS
+    if (heroLargeCms && heroLarge) heroLarge.src = heroLargeCms.src;
+    if (heroSmallCms && heroSmall) heroSmall.src = heroSmallCms.src;
+    if (headlineCms && headline) headline.textContent = headlineCms.textContent;
+    if (sublineCms && subline) subline.textContent = sublineCms.textContent;
+    if (buttonCms && startButton) startButton.textContent = buttonCms.textContent;
 
-  const startButton = document.getElementById('start-button');
-  const questionText = document.getElementById('question-text');
-  const answerButtons = document.getElementById('answer-buttons');
+    // Variabelen
+    let currentQuestion = 0;
+    const totalSteps = questionBlocks.length + 2; // vragen + shortform + longform
+    let currentStep = 0;
 
-  startButton.addEventListener('click', () => {
-    startScreen.style.display = 'none';
-    progressBar.style.display = 'flex';
-    showQuestion();
-  });
-
-  function showQuestion() {
-    if (currentQuestion < questions.length) {
-      questionScreen.style.display = 'block';
+    function showSection(section) {
+      startScreen.style.display = 'none';
+      progressBar.style.display = 'none';
+      questionScreen.style.display = 'none';
       formShort.style.display = 'none';
       formLong.style.display = 'none';
       thankYou.style.display = 'none';
-
-      questionText.innerText = questions[currentQuestion].question;
-      answerButtons.innerHTML = '';
-
-      questions[currentQuestion].answers.forEach(answer => {
-        if (answer) {
-          const btn = document.createElement('button');
-          btn.innerText = answer;
-          btn.classList.add('answer-button');
-          btn.addEventListener('click', nextStep);
-          answerButtons.appendChild(btn);
-        }
-      });
-
-      updateProgress();
-    } else {
-      questionScreen.style.display = 'none';
-      formShort.style.display = 'block';
+      section.style.display = 'block';
     }
-  }
 
-  function nextStep() {
-    currentQuestion++;
-    showQuestion();
-  }
+    function updateProgress() {
+      currentStep++;
+      const progress = (currentStep / totalSteps) * 100;
+      progressFill.style.width = progress + '%';
+    }
 
-  function updateProgress() {
-    const progress = ((currentQuestion) / (questions.length + 2)) * 100;
-    document.getElementById('progress-fill').style.width = progress + '%';
-  }
+    function loadQuestion(index) {
+      if (index < questionBlocks.length) {
+        const question = questionBlocks[index];
+        const answers = answerBlocks[index];
 
-  // Short form submit
-  document.getElementById('short-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    formShort.style.display = 'none';
-    formLong.style.display = 'block';
-    updateProgress();
+        if (question && answers) {
+          questionText.textContent = question.textContent;
+          answerButtons.innerHTML = '';
+
+          answers.querySelectorAll('button').forEach(btn => {
+            const clone = btn.cloneNode(true);
+            clone.addEventListener('click', () => {
+              nextStep();
+            });
+            answerButtons.appendChild(clone);
+          });
+        }
+      }
+    }
+
+    function nextStep() {
+      currentQuestion++;
+      updateProgress();
+
+      if (currentQuestion <= questionBlocks.length) {
+        loadQuestion(currentQuestion - 1);
+      } else if (currentQuestion === questionBlocks.length + 1) {
+        showSection(formShort);
+      } else if (currentQuestion === questionBlocks.length + 2) {
+        showSection(formLong);
+      } else {
+        showSection(thankYou);
+      }
+    }
+
+    // Start Button
+    startButton.addEventListener('click', function () {
+      document.getElementById('start-screen').style.display = 'none';
+      document.getElementById('progress-bar').style.display = 'flex';
+      document.getElementById('question-screen').style.display = 'block';
+      loadQuestion(currentQuestion);
+      updateProgress();
+    });
+
+    // Short Form Submit
+    document.getElementById('short-form')?.addEventListener('submit', function (e) {
+      e.preventDefault();
+      nextStep();
+    });
+
+    // Long Form Submit
+    document.getElementById('long-form')?.addEventListener('submit', function (e) {
+      e.preventDefault();
+      showSection(thankYou);
+      updateProgress();
+    });
+
   });
-
-  // Long form submit
-  document.getElementById('long-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    formLong.style.display = 'none';
-    thankYou.style.display = 'block';
-    updateProgress();
-  });
-
 });
