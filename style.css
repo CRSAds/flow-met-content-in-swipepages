@@ -1,59 +1,60 @@
-body {
-  font-family: 'Inter', sans-serif;
-  background: #f9f9fb;
-  color: #1d1d1f;
-}
-
 #dynamic-flow {
   max-width: 600px;
-  margin: 0 auto;
+  margin: 40px auto;
   padding: 20px;
-  text-align: center;
+  font-family: 'Inter', sans-serif;
 }
 
-#start-screen img,
-#progress-bar img {
-  width: 100px;
-  margin: 10px auto;
+section {
+  margin-bottom: 30px;
 }
 
-#start-button, #short-form button, #long-form button {
-  background-color: #2a32e7;
+button {
+  width: 100%;
+  padding: 15px;
+  background-color: #2a36f7;
   color: white;
   font-weight: bold;
-  padding: 15px;
-  width: 100%;
+  font-size: 18px;
   border: none;
   border-radius: 8px;
-  margin-top: 20px;
-  font-size: 18px;
+  cursor: pointer;
 }
 
-#start-button:hover, #short-form button:hover, #long-form button:hover {
-  background-color: #2028b5;
+button:hover {
+  background-color: #1c28c9;
+}
+
+input, select {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  font-size: 16px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
 }
 
 .progress-container {
   display: flex;
   align-items: center;
-  gap: 15px;
-  background: #e8eaf6;
+  gap: 20px;
+  background: #edf0fc;
   padding: 10px;
-  border-radius: 8px;
+  border-radius: 10px;
 }
 
 .progress {
-  height: 8px;
+  height: 10px;
   background: #ddd;
-  width: 100%;
-  border-radius: 4px;
+  width: 200px;
+  border-radius: 5px;
   overflow: hidden;
 }
 
-.progress-fill {
-  height: 100%;
+#progress-fill {
+  height: 10px;
+  background: #ff7c00;
   width: 0%;
-  background: #f55623;
   transition: width 0.5s;
 }
 
@@ -64,4 +65,12 @@ body {
 
 .birthdate-fields input {
   flex: 1;
+}
+
+h1, h2, p {
+  text-align: center;
+}
+
+img {
+  max-width: 100%;
 }
