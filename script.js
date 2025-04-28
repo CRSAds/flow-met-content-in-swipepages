@@ -1,89 +1,116 @@
-document.addEventListener('DOMContentLoaded', () => {
-  // CMS content ophalen
-  const heroLarge = document.getElementById('hero-large');
-  const heroSmall = document.getElementById('hero-small');
-  const headline = document.getElementById('headline');
-  const subline = document.getElementById('subline');
-  const startButton = document.getElementById('start-button');
+// Wacht tot pagina geladen is
+document.addEventListener('DOMContentLoaded', function() {
+  
+  // CMS content uitlezen
+  const cmsContent = document.getElementById('cms-content');
+  const cmsElements = cmsContent ? cmsContent.querySelectorAll('[id]') : [];
 
-  // Ophalen uit Swipe Pages blokken
-  heroLarge.src = document.getElementById('cms-hero-large')?.src || '';
-  heroSmall.src = document.getElementById('cms-hero-small')?.src || '';
-  headline.textContent = document.getElementById('cms-headline')?.textContent || '';
-  subline.textContent = document.getElementById('cms-subline')?.textContent || '';
-  startButton.textContent = document.getElementById('cms-buttontext')?.textContent || '';
+  const cmsData = {};
+  cmsElements.forEach(el => {
+    cmsData[el.id] = el.innerText.trim();
+  });
+
+  // Content vullen op startscherm
+  document.getElementById('hero-large').src = cmsData['cms-hero-large'] || '';
+  document.getElementById('headline').innerText = cmsData['cms-headline'] || '';
+  document.getElementById('subline').innerText = cmsData['cms-subline'] || '';
+  document.getElementById('start-button').innerText = cmsData['cms-buttontext'] || '';
+
+  // Progressbar vullen
+  document.getElementById('hero-small').src = cmsData['cms-hero-small'] || '';
+  document.getElementById('progress-title').innerText = "Op weg naar je prijs";
 
   // Kleuren instellen
-  const mainColor = document.getElementById('cms-maincolor')?.textContent.trim() || '#2a36f7';
-  const accentColor = document.getElementById('cms-accentcolor')?.textContent.trim() || '#ff7c00';
-
+  const mainColor = cmsData['cms-maincolor'] || '#1B68E9';
+  const accentColor = cmsData['cms-accentcolor'] || '#F55623';
   document.documentElement.style.setProperty('--main-color', mainColor);
   document.documentElement.style.setProperty('--accent-color', accentColor);
 
-  // Flow starten
+  // Dynamisch vragen ophalen
+  const questions = [];
+  let index = 1;
+  while (cmsData[`cms-q${index}`]) {
+    questions.push({
+      question: cmsData[`cms-q${index}`],
+      answers: [
+        cmsData[`cms-q${index}-a1`] || '',
+        cmsData[`cms-q${index}-a2`] || ''
+      ]
+    });
+    index++;
+  }
+
+  // Flow logica
+  let currentQuestion = 0;
+
   const startScreen = document.getElementById('start-screen');
   const progressBar = document.getElementById('progress-bar');
   const questionScreen = document.getElementById('question-screen');
+  const formShort = document.getElementById('form-short');
+  const formLong = document.getElementById('form-long');
+  const thankYou = document.getElementById('thank-you');
+
+  const startButton = document.getElementById('start-button');
+  const questionText = document.getElementById('question-text');
+  const answerButtons = document.getElementById('answer-buttons');
 
   startButton.addEventListener('click', () => {
     startScreen.style.display = 'none';
-    progressBar.style.display = 'block';
-    questionScreen.style.display = 'block';
-    loadQuestion(0);
+    progressBar.style.display = 'flex';
+    showQuestion();
   });
 
-  // Vragen ophalen
-  const questions = [];
-  let questionIndex = 1;
-  while (document.getElementById(`cms-q${questionIndex}`)) {
-    const question = document.getElementById(`cms-q${questionIndex}`).textContent;
-    const answer1 = document.getElementById(`cms-q${questionIndex}-a1`)?.textContent || '';
-    const answer2 = document.getElementById(`cms-q${questionIndex}-a2`)?.textContent || '';
-    questions.push({ question, answers: [answer1, answer2] });
-    questionIndex++;
+  function showQuestion() {
+    if (currentQuestion < questions.length) {
+      questionScreen.style.display = 'block';
+      formShort.style.display = 'none';
+      formLong.style.display = 'none';
+      thankYou.style.display = 'none';
+
+      questionText.innerText = questions[currentQuestion].question;
+      answerButtons.innerHTML = '';
+
+      questions[currentQuestion].answers.forEach(answer => {
+        if (answer) {
+          const btn = document.createElement('button');
+          btn.innerText = answer;
+          btn.classList.add('answer-button');
+          btn.addEventListener('click', nextStep);
+          answerButtons.appendChild(btn);
+        }
+      });
+
+      updateProgress();
+    } else {
+      questionScreen.style.display = 'none';
+      formShort.style.display = 'block';
+    }
   }
 
-  let currentQuestion = 0;
-
-  function loadQuestion(index) {
-    const q = questions[index];
-    if (!q) {
-      // Formulier tonen als vragen klaar zijn
-      document.getElementById('question-screen').style.display = 'none';
-      document.getElementById('form-short').style.display = 'block';
-      return;
-    }
-    document.getElementById('question-text').textContent = q.question;
-    const answerButtons = document.getElementById('answer-buttons');
-    answerButtons.innerHTML = '';
-    q.answers.forEach(answer => {
-      const btn = document.createElement('button');
-      btn.textContent = answer;
-      btn.addEventListener('click', () => {
-        currentQuestion++;
-        updateProgress();
-        loadQuestion(currentQuestion);
-      });
-      answerButtons.appendChild(btn);
-    });
+  function nextStep() {
+    currentQuestion++;
+    showQuestion();
   }
 
   function updateProgress() {
-    const fill = document.getElementById('progress-fill');
-    fill.style.width = `${(currentQuestion / questions.length) * 100}%`;
+    const progress = ((currentQuestion) / (questions.length + 2)) * 100;
+    document.getElementById('progress-fill').style.width = progress + '%';
   }
 
-  // Short form verzenden
-  document.getElementById('short-form').addEventListener('submit', (e) => {
+  // Short form submit
+  document.getElementById('short-form').addEventListener('submit', function(e) {
     e.preventDefault();
-    document.getElementById('form-short').style.display = 'none';
-    document.getElementById('form-long').style.display = 'block';
+    formShort.style.display = 'none';
+    formLong.style.display = 'block';
+    updateProgress();
   });
 
-  // Long form verzenden
-  document.getElementById('long-form').addEventListener('submit', (e) => {
+  // Long form submit
+  document.getElementById('long-form').addEventListener('submit', function(e) {
     e.preventDefault();
-    document.getElementById('form-long').style.display = 'none';
-    document.getElementById('thank-you').style.display = 'block';
+    formLong.style.display = 'none';
+    thankYou.style.display = 'block';
+    updateProgress();
   });
+
 });
